@@ -38,6 +38,18 @@ jobs:
         run: |
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
+            - name: Verify Java source
+        run: |
+          echo "Java source files:"
+          find app/src/main/java -type f
+
+          echo "Compiling Java:"
+          gradle :app:compileDebugJavaWithJavac
+
+          echo "Compiled application classes:"
+          find app/build/intermediates/javac -type f
+
+          
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
 
