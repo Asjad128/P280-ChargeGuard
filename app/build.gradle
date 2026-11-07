@@ -1,21 +1,25 @@
-plugins {
-    id 'com.android.application'
-}
+<?xml version="1.0" encoding="utf-8"?>
 
-android {
-    namespace 'com.p280.chargeguard'
-    compileSdk 35
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    defaultConfig {
-        applicationId 'com.p280.chargeguard'
-        minSdk 17
-        targetSdk 28
-        versionCode 1
-        versionName '0.1.2'
-    }
+    <application
+        android:allowBackup="false"
+        android:label="P280 ChargeGuard"
+        android:theme="@style/AppTheme">
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-}
+        <activity
+            android:name=".MainActivity"
+            android:label="P280 ChargeGuard"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+
+        </activity>
+
+    </application>
+
+</manifest>

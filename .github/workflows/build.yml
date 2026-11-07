@@ -1,10 +1,11 @@
 
-name: Android build
+name: P280 ChargeGuard Android Build
 
 on:
   push:
     branches:
       - main
+
   workflow_dispatch:
 
 permissions:
@@ -15,21 +16,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle 8.9
+      - name: Setup Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Set up Android SDK
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v4
         with:
           packages: 'platform-tools'
@@ -40,31 +41,43 @@ jobs:
 
       - name: Verify project structure
         run: |
-          echo "Java source files:"
-          find app/src/main/java -type f
+          echo "Checking project files..."
 
-          echo "Manifest:"
-          cat app/src/main/AndroidManifest.xml
+          test -f settings.gradle
+          test -f build.gradle
+          test -f app/build.gradle
+          test -f app/src/main/AndroidManifest.xml
 
-          echo "MainActivity source:"
           test -f app/src/main/java/com/p280/chargeguard/MainActivity.java
-          head -n 5 app/src/main/java/com/p280/chargeguard/MainActivity.java
+          test -f app/src/main/res/values/styles.xml
 
-      - name: Compile Java
-        run: gradle --no-daemon :app:compileDebugJavaWithJavac
+          echo "All required files found."
+
+      - name: Compile Java source
+        run: |
+          gradle --no-daemon :app:compileDebugJavaWithJavac
 
       - name: Verify compiled Activity
         run: |
-          find app/build/intermediates -name "MainActivity.class" -print
-          find app/build/intermediates -name "MainActivity.class" | grep -q .
+          find app/build/intermediates \
+            -name "MainActivity.class" -print
 
-      - name: Build debug APK
-        run: gradle --no-daemon assembleDebug
+          find app/build/intermediates \
+            -name "MainActivity.class" | grep -q .
+
+          echo "MainActivity compiled successfully."
+
+      - name: Build APK
+        run: |
+          gradle --no-daemon assembleDebug
 
       - name: Verify APK
         run: |
           ls -lh app/build/outputs/apk/debug/
+
           test -f app/build/outputs/apk/debug/app-debug.apk
+
+          echo "APK generated successfully."
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

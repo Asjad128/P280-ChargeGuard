@@ -1,3 +1,4 @@
+
 package com.p280.chargeguard;
 
 import android.app.Activity;
@@ -16,6 +17,7 @@ import java.io.IOException;
 public class MainActivity extends Activity {
 
     private TextView status;
+    private Button testButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,16 +31,26 @@ public class MainActivity extends Activity {
         TextView title = new TextView(this);
         title.setText("P280 ChargeGuard");
         title.setTextSize(25);
+        title.setGravity(Gravity.CENTER);
+
+        TextView description = new TextView(this);
+        description.setText(
+            "Root access and battery diagnostics"
+        );
+        description.setTextSize(15);
+        description.setGravity(Gravity.CENTER);
+        description.setPadding(0, 15, 0, 30);
 
         status = new TextView(this);
+        status.setText("Status: Ready");
         status.setTextSize(16);
-        status.setPadding(0, 35, 0, 35);
-        status.setText("Ready to test root access.");
+        status.setPadding(0, 20, 0, 30);
 
-        Button testButton = new Button(this);
+        testButton = new Button(this);
         testButton.setText("Test Root Access");
 
         layout.addView(title);
+        layout.addView(description);
         layout.addView(status);
         layout.addView(testButton);
 
@@ -53,20 +65,27 @@ public class MainActivity extends Activity {
     }
 
     private void testRoot() {
+
+        testButton.setEnabled(false);
         status.setText("Requesting root access...");
 
         new Thread(new Runnable() {
+
             @Override
             public void run() {
+
                 String result;
 
                 try {
-                    Process process =
-                        new ProcessBuilder("/system/xbin/su")
-                            .redirectErrorStream(true)
-                            .start();
 
-                    OutputStream input = process.getOutputStream();
+                    Process process = new ProcessBuilder(
+                        "/system/xbin/su"
+                    )
+                    .redirectErrorStream(true)
+                    .start();
+
+                    OutputStream input =
+                        process.getOutputStream();
 
                     input.write(
                         ("id\n" +
@@ -79,11 +98,16 @@ public class MainActivity extends Activity {
                     input.flush();
                     input.close();
 
-                    BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(process.getInputStream())
-                    );
+                    BufferedReader reader =
+                        new BufferedReader(
+                            new InputStreamReader(
+                                process.getInputStream()
+                            )
+                        );
 
-                    StringBuilder output = new StringBuilder();
+                    StringBuilder output =
+                        new StringBuilder();
+
                     String line;
 
                     while ((line = reader.readLine()) != null) {
@@ -92,29 +116,48 @@ public class MainActivity extends Activity {
 
                     int exitCode = process.waitFor();
 
-                    result = "Exit code: " + exitCode +
-                             "\n\nRoot and battery test:\n" +
-                             output.toString();
+                    String data = output.toString();
 
-                    if (output.toString().contains("uid=0(root)")) {
+                    result =
+                        "Exit code: " + exitCode +
+                        "\n\nDiagnostics:\n" + data;
+
+                    if (data.contains("uid=0(root)") ||
+                        data.contains("uid=0 ")) {
+
                         result += "\nROOT ACCESS: SUCCESS";
+
                     } else {
+
                         result += "\nROOT ACCESS: NOT CONFIRMED";
+
                     }
 
                 } catch (Exception e) {
-                    result = "Error: " + e.getMessage();
+
+                    result =
+                        "ROOT TEST FAILED\n\n" +
+                        e.getClass().getSimpleName() +
+                        ": " + e.getMessage();
+
                 }
 
                 final String finalResult = result;
 
                 runOnUiThread(new Runnable() {
+
                     @Override
                     public void run() {
+
                         status.setText(finalResult);
+                        testButton.setEnabled(true);
+
                     }
+
                 });
+
             }
+
         }).start();
     }
 }
